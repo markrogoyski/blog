@@ -86,7 +86,7 @@ We now have a dilemma. How do we recurse when we need to call a function by its 
 
 Well, just look a bit to the left, we have a lambda, which is an anonymous function. What if we replaced our call to `fact` with the same lambda, because that lambda _is_ factorial, presuming that the recursive call to factorial works.
 
-```
+```python
 for x in (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10):
     print(x,
           (lambda n: 1 if n <= 1 else n * (
@@ -142,6 +142,8 @@ for x in (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10):
             )(n - 1))
         )(n - 1))(x)
     )
+
+```
 
 ```
 0 1
@@ -209,6 +211,7 @@ TypeError: 'NoneType' object is not callable
 ```
 
 Here is the problem with what we have: we have an inner lambda that computes factorial, and it makes a recursive call to `fact`. It relies on the outer lambda to provide it with `fact`.
+
 The problem is that the outer lambda also relies at some point on someone passing it in `fact`, which we don't have, hence the failure.
 
 What if, instead, we defined that missing function--the function that makes us factorial. Does that even make sense? Let's try it.
@@ -304,13 +307,34 @@ It does!
 
 But how on earth?
 
-Let's analyze this in detail.
+Let's analyze this in detail. First we remove the unnecessary bits and focus just on the anonymous factorial function.
 
-- The outer lambda `(lambda make_fact: make_fact(make_fact))` takes a function that makes a factorial. We call that function and pass it itself as an argument. That will create a function that computes factorial (let's just believe that it does for now).
-- We pass in as the argument that lambda our inner lambdas `(lambda make_fact: lambda n: 1 if n <= 1 else n * (make_fact(make_fact))(n - 1))`
-- The innter lambda is a function that if given a function that creates a factorial `make_fact`, it will call a function that computes one recursive call of factorial.
-- It doesn't actually have a factorial function, all it has is `make_fact`, which is a function that, if given a function that creates a factorial function, will return a function that computes one recursive call of factorial.
-- What is `make_fact` here? It is itself, the inner lambda `(lambda make_fact: lambda n: 1 if n <= 1 else n * (make_fact(make_fact))(n - 1))`.
+```python
+(lambda make_fact: make_fact(make_fact))(
+    (lambda make_fact: lambda n: 1 if n <= 1 else n * (make_fact(make_fact))(n - 1))
+)(x)
+```
+
+The inner lambda takes a function `make_fact` as an argument and returns a lambda that computes factorial of n.
+
+When it makes what should be the recursive call to `fact`, it does not have a factorial function. What it has is the argument `make_fact` that was passed in. `make_fact` is a function that will return a function that computes factorial.
+
+`make_fact` is in fact the inner lambda. When we call `make_fact`, we pass in `make_fact` as its argument.
+
+What is `make_fact`? It is the entire inner lambda `(lambda make_fact: lambda n: 1 if n <= 1 else n * (make_fact(make_fact))(n - 1))`.
+
+Calling `make_fact(make_fact` returns the inner lambda, with `make_fact` passed into it as its argument, so it is therefore a function that computes factorial. And when it gets to its recursive call of `make_fact(make_fact)`, it has `make_fact` as an argument to invoke that returns the inner lambda, because `make_fact` itself is the inner lambda.
+
+So that returns a new function that computes factorial, which is the entire inner lambda `(lambda make_fact: lambda n: 1 if n <= 1 else n * (make_fact(make_fact))(n - 1))`.
+
+What is `make_fact`? It is the entire inner lambda `(lambda make_fact: lambda n: 1 if n <= 1 else n * (make_fact(make_fact))(n - 1))`.
+
+Calling `make_fact(make_fact` returns the inner lambda, with `make_fact` passed into it as its argument, so it is therefore a function that computes factorial. And when it gets to its recursive call of `make_fact(make_fact)`, it has `make_fact` as an argument to invoke that returns the inner lambda, because `make_fact` itself is the inner lambda.
+
+Wait a minute...we have an infinite loop!
+
+But how does this process get started? See the outer lambda `(lambda make_fact: make_fact(make_fact))`. We pass into it `make_fact` and call `make_fact(make_fact)`. What is `make_fact`? It is the entire inner lambda `(lambda make_fact: lambda n: 1 if n <= 1 else n * (make_fact(make_fact))(n - 1))`. And what do we pass into that as an argument: `n`!
+
 
 While this works, it doesn't look like factorial. It's almost something else, which just happens to compute factorial.
 
@@ -362,7 +386,7 @@ for x in (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10):
     )
 ```
 
-TO DO: Add more explanation.
+The trick is we've just added another layer of currying functions, but it is still the same trick. But now in our extra lambda wrapper we could call the call to `make_fact(make_fact)` as just `fact` now, but make no mistake, it is still `make_fact(make_fact)` just with a different name, as we are now passing it in as the final lambda.
 
 We can actually fully extract the factorial function out of this by separating the part that makes factorial an anonymous recursive function, from the factorial definition.
 
@@ -383,7 +407,7 @@ Starting with the second lambda, we have an impossible anonymous recursive facto
 
 Above that, we have what is known as the Y-combinator, which is a function, that if given an impossible anonymous recursive function that cannot possible work, returns a version of it that does work.
 
-And to test that we didn't just pull some shenanigans, here it is with an impossible version of an anonymous recusrive Fibonacci function that cannot possible work, but it does!
+And to test that we didn't just pull some shenanigans that just happens to compute factorial, here it is with an impossible version of an anonymous recusrive Fibonacci function that cannot possible work, but it does!
 
 ```python
 for x in (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12):
@@ -398,6 +422,17 @@ for x in (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12):
     )
 ```
 
-
-
-
+```
+1 1
+2 1
+3 2
+4 3
+5 5
+6 8
+7 13
+8 21
+9 34
+10 55
+11 89
+12 144
+```
