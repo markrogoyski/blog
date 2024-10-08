@@ -323,13 +323,13 @@ When it makes what should be the recursive call to `fact`, it does not have a fa
 
 What is `make_fact`? It is the entire inner lambda `(lambda make_fact: lambda n: 1 if n <= 1 else n * (make_fact(make_fact))(n - 1))`.
 
-Calling `make_fact(make_fact` returns the inner lambda, with `make_fact` passed into it as its argument, so it is therefore a function that computes factorial. And when it gets to its recursive call of `make_fact(make_fact)`, it has `make_fact` as an argument to invoke that returns the inner lambda, because `make_fact` itself is the inner lambda.
+Calling `make_fact(make_fact)` returns the inner lambda, with `make_fact` passed into it as its argument, so it is therefore a function that computes factorial. And when it gets to its recursive call of `make_fact(make_fact)`, it has `make_fact` as an argument to invoke that returns the inner lambda, because `make_fact` itself is the inner lambda.
 
 So that returns a new function that computes factorial, which is the entire inner lambda `(lambda make_fact: lambda n: 1 if n <= 1 else n * (make_fact(make_fact))(n - 1))`.
 
 What is `make_fact`? It is the entire inner lambda `(lambda make_fact: lambda n: 1 if n <= 1 else n * (make_fact(make_fact))(n - 1))`.
 
-Calling `make_fact(make_fact` returns the inner lambda, with `make_fact` passed into it as its argument, so it is therefore a function that computes factorial. And when it gets to its recursive call of `make_fact(make_fact)`, it has `make_fact` as an argument to invoke that returns the inner lambda, because `make_fact` itself is the inner lambda.
+Calling `make_fact(make_fact)` returns the inner lambda, with `make_fact` passed into it as its argument, so it is therefore a function that computes factorial. And when it gets to its recursive call of `make_fact(make_fact)`, it has `make_fact` as an argument to invoke that returns the inner lambda, because `make_fact` itself is the inner lambda.
 
 Wait a minute...we have an infinite loop!
 
@@ -338,7 +338,7 @@ But how does this process get started? See the outer lambda `(lambda make_fact: 
 
 While this works, it doesn't look like factorial. It's almost something else, which just happens to compute factorial.
 
-Let's refactor it by extracting our the mind-bending inner call to `make_fact(make_fact)` and try to get back our regular factorial method. We can this by wrapping it in yet another lambda. This new lambda will take make_fact, and by executing that with the call to `make_fact(make_fact)` will have created a function that computes one recursive call of factorial, and then we pass that in to our originally-defined double lambda that takes in factorial as an argument and calls it directly with `n - 1`.
+Let's refactor it by extracting our the mind-bending inner call to `make_fact(make_fact)` and try to get back our regular factorial method. We can this by wrapping it in yet another lambda. This new lambda will take `make_fact`, and by executing that with the call to `make_fact(make_fact)` will have created a function that computes one recursive call of factorial, and then we pass that in to our originally-defined double lambda that takes in factorial as an argument and calls it directly with `n - 1`.
 
 ```python
 for x in (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10):
